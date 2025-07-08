@@ -1,0 +1,72 @@
+import Cliente from '../models/Cliente.js';
+import bcrypt from 'bcryptjs';
+
+const clientController = {}
+
+clientController.getClients = async (req, res) => {
+    try {
+        const clients = await Cliente.find();
+        res.status(200).json(clients);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving clients', error });
+    }
+};
+
+clientController.getClientById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const client = await Cliente.findById(id);
+        if (!client) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        res.status(200).json(client);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving client', error });
+    }
+}
+
+clientController.createClient = async (req, res) => {
+    const { name, email, phone ,password, age } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newClient = new Cliente({ name, email, phone ,password: hashedPassword, age });
+        const savedClient = await newClient.save();
+        res.status(201).json(savedClient);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating client', error });
+    }
+}
+
+clientController.updateClient = async (req, res) => {
+    const { id } = req.params;
+    const { name, email, phone, password, age } = req.body;
+    try {
+        const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+        const updateData = { name, email, phone, age };
+        if (hashedPassword) {
+            updateData.password = hashedPassword;
+        }
+        const updatedClient = await Cliente.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedClient) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        res.status(200).json(updatedClient);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating client', error });
+    }
+}
+
+clientController.deleteClient = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deletedClient = await Cliente.findByIdAndDelete(id);
+        if (!deletedClient) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        res.status(200).json({ message: 'Client deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting client', error });
+    }
+};
+
+export default clientController;    
