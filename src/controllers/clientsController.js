@@ -79,4 +79,17 @@ clientController.updateClient = async (req, res) => {
     }
 }
 
+clientController.deleteClient = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deletedClient = await Cliente.findByIdAndDelete(id);
+        if (!deletedClient) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        res.status(200).json({ message: 'Client deleted successfully' });
+    } catch (error) {  
+        res.status(500).json({ message: 'Error deleting client', error });
+    }
+}
+
 export default clientController;
